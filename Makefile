@@ -1,7 +1,7 @@
 CC := g++
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -fopenmp
-VCPKG = D:/ING2/vcpkg
+VCPKG = C:/Users/Utilisateur/Desktop/ING2/Synthese Image/Projet/vcpkg
 VCPKG_LIB = $(VCPKG)/installed/x64-mingw-static/lib
 VCPKG_INC = $(VCPKG)/installed/x64-mingw-static/include
 
