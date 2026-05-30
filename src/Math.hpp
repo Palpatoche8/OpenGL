@@ -170,7 +170,7 @@ static Mat4 identity()
 static Mat4 perspective(float fovDeg, float aspect, float nearPlane,
                         float farPlane)
 {
-    float fovRad = fovDeg * 3.1415926535f / 180.f;
+    float fovRad = fovDeg * M_PI / 180.f;
     float f = 1.f / std::tan(fovRad / 2.f);
 
     Mat4 r = {};

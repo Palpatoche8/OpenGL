@@ -50,7 +50,8 @@ void ParticleSystem::spawnOne()
     {
         if (p.life <= 0.f)
         {
-            p.pos = Vec3(randSigned() * 0.06f, -0.85f, 0.f);
+            p.pos = Vec3(randSigned() * 0.06f, -0.85f + randSigned() * 0.06f,
+                         0.f + randSigned() * 0.06f);
 
             float spreadX = randSigned() * 0.18f;
             float speedY = 0.5f + randf() * 0.6f;
