@@ -1,46 +1,36 @@
-#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
 
-#include "ParticleSystem.hpp"
 #include "Shader.hpp"
+#include "ParticleSystem.hpp"
 
-static void errorCallback(int, const char *desc)
-{
+static void errorCallback(int, const char* desc) {
     std::cerr << "GLFW error: " << desc << '\n';
 }
 
-static void keyCallback(GLFWwindow *w, int key, int, int action, int)
-{
+static void keyCallback(GLFWwindow* w, int key, int, int action, int) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GLFW_TRUE);
 }
 
-int main()
-{
+int main() {
     glfwSetErrorCallback(errorCallback);
-    if (!glfwInit())
-        return 1;
+    if (!glfwInit()) return 1;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window =
-        glfwCreateWindow(800, 600, "Fire Simulation", nullptr, nullptr);
-    if (!window)
-    {
-        glfwTerminate();
-        return 1;
-    }
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Fire Simulation", nullptr, nullptr);
+    if (!window) { glfwTerminate(); return 1; }
 
     glfwSetKeyCallback(window, keyCallback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to init GLAD\n";
         return 1;
     }
@@ -51,17 +41,16 @@ int main()
     ParticleSystem particles;
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE); // additive blending for glow
+    glBlendFunc(GL_ONE, GL_ONE);           // additive blending for glow
 
-    glEnable(GL_PROGRAM_POINT_SIZE); // let vertex shader set gl_PointSize
+    glEnable(GL_PROGRAM_POINT_SIZE);       // let vertex shader set gl_PointSize
 
     double prevTime = glfwGetTime();
 
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         double now = glfwGetTime();
-        float dt = (float)(now - prevTime);
-        prevTime = now;
+        float  dt  = (float)(now - prevTime);
+        prevTime   = now;
 
         particles.update(dt);
         particles.uploadToGPU();
@@ -74,8 +63,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-        // Pass window dimensions so the vertex shader can scale point sizes
-        // correctly
+        // Pass window dimensions so the vertex shader can scale point sizes correctly
         shader.setVec2("uResolution", (float)w, (float)h);
 
         glBindVertexArray(particles.vao());
