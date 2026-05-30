@@ -29,8 +29,12 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS) $(GLAD_OBJ) | build
 	$(CXX) $(CXXFLAGS) $^ $(LIBS) -o $@
+ifeq ($(OS), Windows_NT)
 	xcopy /E /I /Y shaders build\shaders
-	
+else
+	mkdir -p build/shaders
+	cp -r shaders/* build/shaders/
+endif	
 build/%.o: src/%.cpp | build
 	$(CXX) $(CXXFLAGS) $(INCS) -c $< -o $@
 

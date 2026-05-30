@@ -1,23 +1,27 @@
 #pragma once
-#include <glad/glad.h>
-#include "Math.hpp"
 #include <array>
+#include <glad/glad.h>
+
+#include "Math.hpp"
 
 static constexpr int MAX_PARTICLES = 500;
 
-struct Particle {
-    Vec2  pos;
-    Vec2  vel;
-    float life;   
-    float maxLife;   
+struct Particle
+{
+    Vec2 pos;
+    Vec2 vel;
+    float life;
+    float maxLife;
 };
 
-struct ParticleVertex {
-    Vec2  pos;
-    float life; 
+struct ParticleVertex
+{
+    Vec2 pos;
+    float life;
 };
 
-class ParticleSystem {
+class ParticleSystem
+{
 public:
     ParticleSystem();
     ~ParticleSystem();
@@ -25,8 +29,14 @@ public:
     void update(float dt);
     void uploadToGPU();
 
-    GLuint vao() const { return m_vao; }
-    int    liveCount() const { return m_liveCount; }
+    GLuint vao() const
+    {
+        return m_vao;
+    }
+    int liveCount() const
+    {
+        return m_liveCount;
+    }
 
 private:
     std::array<Particle, MAX_PARTICLES> m_pool;
