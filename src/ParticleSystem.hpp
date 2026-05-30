@@ -8,15 +8,15 @@ static constexpr int MAX_PARTICLES = 500;
 
 struct Particle
 {
-    Vec2 pos;
-    Vec2 vel;
+    Vec3 pos;
+    Vec3 vel;
     float life;
     float maxLife;
 };
 
 struct ParticleVertex
 {
-    Vec2 pos;
+    Vec3 pos;
     float life;
 };
 

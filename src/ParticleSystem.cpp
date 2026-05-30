@@ -27,7 +27,7 @@ ParticleSystem::ParticleSystem()
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(m_verts), nullptr, GL_STREAM_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ParticleVertex),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ParticleVertex),
                           (void *)offsetof(ParticleVertex, pos));
     glEnableVertexAttribArray(0);
 
@@ -50,11 +50,11 @@ void ParticleSystem::spawnOne()
     {
         if (p.life <= 0.f)
         {
-            p.pos = Vec2(randSigned() * 0.06f, -0.85f);
+            p.pos = Vec3(randSigned() * 0.06f, -0.85f, 0.f);
 
             float spreadX = randSigned() * 0.18f;
             float speedY = 0.5f + randf() * 0.6f;
-            p.vel = Vec2(spreadX, speedY);
+            p.vel = Vec3(spreadX, speedY, 0.f);
 
             p.maxLife = 1.2f + randf() * 0.8f;
             p.life = p.maxLife;

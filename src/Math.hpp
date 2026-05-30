@@ -66,6 +66,7 @@ struct Vec2
         return x * o.x + y * o.y;
     }
 };
+
 inline Vec2 operator*(float s, const Vec2 &v)
 {
     return v * s;
@@ -145,7 +146,66 @@ struct Vec3
         return { y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x };
     }
 };
+
 inline Vec3 operator*(float s, const Vec3 &v)
 {
     return v * s;
+}
+
+struct Mat4
+{
+    float m[16];
+};
+
+static Mat4 identity()
+{
+    Mat4 r = {};
+    r.m[0] = 1.f;
+    r.m[5] = 1.f;
+    r.m[10] = 1.f;
+    r.m[15] = 1.f;
+    return r;
+}
+
+static Mat4 perspective(float fovDeg, float aspect, float nearPlane,
+                        float farPlane)
+{
+    float fovRad = fovDeg * 3.1415926535f / 180.f;
+    float f = 1.f / std::tan(fovRad / 2.f);
+
+    Mat4 r = {};
+    r.m[0] = f / aspect;
+    r.m[5] = f;
+    r.m[10] = (farPlane + nearPlane) / (nearPlane - farPlane);
+    r.m[11] = -1.f;
+    r.m[14] = (2.f * farPlane * nearPlane) / (nearPlane - farPlane);
+
+    return r;
+}
+
+static Mat4 lookAt(Vec3 eye, Vec3 center, Vec3 up)
+{
+    Vec3 f = (center - eye).normalized();
+    Vec3 s = f.cross(up).normalized();
+    Vec3 u = s.cross(f);
+
+    Mat4 r = identity();
+
+    r.m[0] = s.x;
+    r.m[4] = s.y;
+    r.m[8] = s.z;
+
+    r.m[1] = u.x;
+    r.m[5] = u.y;
+    r.m[9] = u.z;
+
+    r.m[2] = -f.x;
+    r.m[6] = -f.y;
+    r.m[10] = -f.z;
+
+    r.m[12] = -s.dot(eye);
+    r.m[13] = -u.dot(eye);
+    r.m[14] = f.dot(eye);
+
+    return r;
 }
