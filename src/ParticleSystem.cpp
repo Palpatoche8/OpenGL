@@ -66,7 +66,7 @@ void ParticleSystem::spawnOne()
 
 void ParticleSystem::update(float dt)
 {
-    m_spawnAccum += dt * 350.f;
+    m_spawnAccum += dt * 1000000.f;
     while (m_spawnAccum >= 1.f)
     {
         spawnOne();

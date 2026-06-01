@@ -20,7 +20,7 @@ endif
 INCS     := -I"$(VCPKG_INC)" -I$(GLAD_INC) -Isrc -Iextern/glm
 
 TARGET   := build/fire_sim
-SRCS     := src/main.cpp src/Shader.cpp src/ParticleSystem.cpp
+SRCS     := src/main.cpp src/Shader.cpp src/ParticleSystem.cpp src/image.cpp src/image_io.cpp
 OBJS     := $(patsubst src/%.cpp, build/%.o, $(SRCS))
 
 .PHONY: all clean

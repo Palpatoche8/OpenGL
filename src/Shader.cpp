@@ -54,6 +54,11 @@ void Shader::setMat4(const std::string &name, const float *mat) const
                        mat);
 }
 
+void Shader::setTexture(const std::string &name, const std::string &path) const
+{
+    glGetUniformLocation(id, name.c_str());
+}
+
 GLuint Shader::compile(const std::string &path, GLenum type)
 {
     std::string src = readFile(path);

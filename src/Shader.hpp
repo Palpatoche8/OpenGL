@@ -19,6 +19,7 @@ public:
     void setVec2(const std::string &name, float x, float y) const;
     void setVec3(const std::string &name, float x, float y, float z) const;
     void setMat4(const std::string &name, const float *mat) const;
+    void setTexture(const std::string &name, const std::string &path) const;
 
 private:
     static GLuint compile(const std::string &path, GLenum type);

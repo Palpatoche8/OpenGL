@@ -16,6 +16,7 @@ void main() {
 
     float size = mix(28.0, 4.0, aAge) * (uResolution.y / 600.0);
     gl_PointSize = max(size, 1.0);
+    gl_PointSize *= 3;
 
 
     vec3 color;                                                                              // White

@@ -6,6 +6,8 @@
 #include "Shader.hpp"
 #include "ParticleSystem.hpp"
 #include "Camera.hpp"
+#include "Texture.hpp"
+#include "image_io.hh"
 
 static void errorCallback(int, const char* desc) {
     std::cerr << "GLFW error: " << desc << '\n';
@@ -20,6 +22,34 @@ static void mouseCallback(GLFWwindow *window, double xpos, double ypos)
 {
     Camera *camera = static_cast<Camera *>(glfwGetWindowUserPointer(window));
     camera->mouseCallback(window, xpos, ypos);
+}
+
+void init_textures(GLuint program_id) {
+  tifo::rgb24_image *texture = tifo::load_image("/home/lancelot/Documents/OpenGL/Textures/texture.tga");
+  GLuint texture_id;
+  GLint tex_location;
+
+  std::cout << "texture " << texture->sx << " ," <<  texture->sy << "\n";
+
+  GLint texture_units, combined_texture_units;
+  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+  glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &combined_texture_units);
+  std::cout << "Limit 1 " <<  texture_units << " limit 2 " << combined_texture_units << std::endl;
+
+  glGenTextures(1, &texture_id);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,texture_id);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->sx, texture->sy, 0, GL_RGB, GL_UNSIGNED_BYTE, texture->pixels);
+  tex_location = glGetUniformLocation(program_id, "texture_sampler");
+  std::cout << "tex_location " << tex_location << std::endl;
+  glUniform1i(tex_location,0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  delete texture;
 }
 
 
@@ -60,6 +90,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     double prevTime = glfwGetTime();
+
+    init_textures(shader.id);
 
     while (!glfwWindowShouldClose(window)) {
         double now = glfwGetTime();
