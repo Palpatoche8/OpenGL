@@ -1,10 +1,15 @@
 #pragma once
 #include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdlib>
 #include <glad/glad.h>
+#include <string>
+#include <vector>
 
 #include "Math.hpp"
 
-static constexpr int MAX_PARTICLES = 500;
+static constexpr int MAX_PARTICLES = 10000;
 
 struct Particle
 {

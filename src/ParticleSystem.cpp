@@ -1,10 +1,5 @@
 #include "ParticleSystem.hpp"
 
-#include <cmath>
-#include <cstddef>
-#include <cstdlib>
-#include <glad/glad.h>
-
 static float randf()
 {
     return (float)rand() / (float)RAND_MAX;
@@ -66,7 +61,7 @@ void ParticleSystem::spawnOne()
 
 void ParticleSystem::update(float dt)
 {
-    m_spawnAccum += dt * 1000000.f;
+    m_spawnAccum += dt * 10000.f;
     while (m_spawnAccum >= 1.f)
     {
         spawnOne();

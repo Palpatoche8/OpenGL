@@ -18,5 +18,5 @@ void main() {
     softness = pow(softness, 0.5);
 
     // fragColor = vColor * softness;
-    fragColor = c1 * softness * vColor * 0.5;
+    fragColor = c1 * softness * vColor * softness;
 }
