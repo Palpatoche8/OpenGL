@@ -8,6 +8,7 @@
 #include "Camera.hpp"
 #include "Texture.hpp"
 #include "image_io.hh"
+#include "Mesh.hpp"
 
 static void errorCallback(int, const char* desc) {
     std::cerr << "GLFW error: " << desc << '\n';
@@ -82,6 +83,9 @@ int main() {
 
     Shader shader("shaders/fire.vert", "shaders/fire.frag");
     ParticleSystem particles;
+    
+    Shader meshShader("shaders/mesh.vert", "shaders/mesh.frag");
+    Mesh campsite("models/campFire.obj");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);           // additive blending for glow
@@ -110,11 +114,12 @@ int main() {
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
-        // Pass window dimensions so the vertex shader can scale point sizes correctly
-        shader.setVec2("uResolution", (float)w, (float)h);
-
         Mat4 model = identity();
+        Mat4 meshModel = identity();
+        meshModel.m[0] = 0.003f;
+        meshModel.m[5] = 0.003f;
+        meshModel.m[10] = 0.003f;
+        meshModel.m[13] = -1.0f;
         Mat4 view = lookAt(
             camera.pos,
             camera.pos + camera.front,
@@ -127,15 +132,30 @@ int main() {
             100.0f
         );
 
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+
+        meshShader.use();
+        meshShader.setMat4("uModel", meshModel.m);
+        meshShader.setMat4("uView", view.m);
+        meshShader.setMat4("uProjection", projection.m);
+        meshShader.setVec3("uLightPos", camera.pos.x, camera.pos.y, camera.pos.z);
+        meshShader.setVec3("uColor", 1.0f, 0.0f, 0.0f);
+
+        campsite.draw();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+
+        shader.use();
+        shader.setVec2("uResolution", (float)w, (float)h);
         shader.setMat4("uModel", model.m);
         shader.setMat4("uView", view.m);
         shader.setMat4("uProjection", projection.m);
 
         glDepthMask(GL_FALSE);
-        glDepthMask(GL_FALSE);
         glBindVertexArray(particles.vao());
         glDrawArrays(GL_POINTS, 0, particles.liveCount());
-        glDepthMask(GL_TRUE);
         glDepthMask(GL_TRUE);
 
         glfwSwapBuffers(window);
