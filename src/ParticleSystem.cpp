@@ -39,17 +39,43 @@ ParticleSystem::~ParticleSystem()
     glDeleteVertexArrays(1, &m_vao);
 }
 
-void ParticleSystem::spawnOne()
+void ParticleSystem::spawnOne(const std::vector<std::string> &pattern)
 {
+    std::vector<Vec2> cells;
+
+    for (int y = 0; y < (int)pattern.size(); ++y)
+    {
+        for (int x = 0; x < (int)pattern[y].size(); ++x)
+        {
+            if (pattern[y][x] == 'X')
+                cells.push_back(Vec2((float)x, (float)y));
+        }
+    }
+
+    if (cells.empty())
+        return;
+
     for (auto &p : m_pool)
     {
         if (p.life <= 0.f)
         {
-            p.pos = Vec3(randSigned() * 0.06f, -0.85f + randSigned() * 0.06f,
-                         0.f + randSigned() * 0.06f);
+            Vec2 cell = cells[rand() % cells.size()];
+
+            float cellSize = 0.08f;
+
+            float patternWidth = (float)pattern[0].size();
+            float patternHeight = (float)pattern.size();
+
+            float x = (cell.x - patternWidth * 0.5f) * cellSize;
+            float y = -(cell.y - patternHeight * 0.5f) * cellSize;
+
+            x += randSigned() * cellSize * 0.35f;
+            y += randSigned() * cellSize * 0.35f;
+
+            p.pos = Vec3(x, randSigned() * 0.03f - 1, -0.85f + y);
 
             float spreadX = randSigned() * 0.18f;
-            float speedY = 0.5f + randf() * 0.6f;
+            float speedY = 0.2f + randf() * 0.5f;
             p.vel = Vec3(spreadX, speedY, 0.f);
 
             p.maxLife = 1.2f + randf() * 0.8f;
@@ -59,12 +85,23 @@ void ParticleSystem::spawnOne()
     }
 }
 
+std::string s1 = "  X     X  ";
+std::string s2 = "   X   X   ";
+std::string s3 = "  XXXXXXX  ";
+std::string s4 = " XX XXX XX ";
+std::string s5 = "XXXXXXXXXXX";
+std::string s6 = "X XXXXXXX X";
+std::string s7 = "X X     X X";
+std::string s8 = "   XX XX   ";
+
+std::string *pattern = new std::string[8]{ s1, s2, s3, s4, s5, s6, s7, s8 };
+
 void ParticleSystem::update(float dt)
 {
     m_spawnAccum += dt * 10000.f;
     while (m_spawnAccum >= 1.f)
     {
-        spawnOne();
+        spawnOne(std::vector<std::string>(pattern, pattern + 8));
         m_spawnAccum -= 1.f;
     }
 

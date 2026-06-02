@@ -52,5 +52,5 @@ private:
 
     float m_spawnAccum = 0.f;
 
-    void spawnOne();
+    void spawnOne(const std::vector<std::string> &pattern);
 };
