@@ -2,62 +2,67 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
+#include <cmath>
+#include <filesystem>
 
 #include "Shader.hpp"
-#include "ParticleSystem.hpp"
 #include "Camera.hpp"
-#include "Texture.hpp"
-#include "image_io.hh"
+#include "PointLight.hpp"
+#include "ParticleSystem.hpp"
+#include "SparkSystem.hpp"
+#include "SmokeSystem.hpp"
+#include "Skybox.hpp"
 #include "Mesh.hpp"
 
-static void errorCallback(int, const char* desc) {
-    std::cerr << "GLFW error: " << desc << '\n';
-}
+// ---- Globals for callbacks ----
+static Camera g_cam;
 
-static void keyCallback(GLFWwindow* w, int key, int, int action, int) {
+static void errorCB(int, const char* d) { std::cerr << "GLFW: " << d << '\n'; }
+
+static void keyCB(GLFWwindow* w, int key, int, int action, int) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(w, GLFW_TRUE);
 }
 
-static void mouseCallback(GLFWwindow *window, double xpos, double ypos)
-{
-    Camera *camera = static_cast<Camera *>(glfwGetWindowUserPointer(window));
-    camera->mouseCallback(window, xpos, ypos);
+static void mouseCB(GLFWwindow* w, double xpos, double ypos) {
+    g_cam.mouseCallback(w, xpos, ypos);
 }
 
-void init_textures(GLuint program_id) {
-  tifo::rgb24_image *texture = tifo::load_image("/home/lancelot/Documents/OpenGL/Textures/texture.tga");
-  GLuint texture_id;
-  GLint tex_location;
+// ---- Embers: static glowing points ringing the fire base ----
+static constexpr int EMBER_COUNT = 28;
+static GLuint g_emberVao, g_emberVbo;
 
-  std::cout << "texture " << texture->sx << " ," <<  texture->sy << "\n";
-
-  GLint texture_units, combined_texture_units;
-  glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
-  glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &combined_texture_units);
-  std::cout << "Limit 1 " <<  texture_units << " limit 2 " << combined_texture_units << std::endl;
-
-  glGenTextures(1, &texture_id);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D,texture_id);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture->sx, texture->sy, 0, GL_RGB, GL_UNSIGNED_BYTE, texture->pixels);
-  tex_location = glGetUniformLocation(program_id, "texture_sampler");
-  std::cout << "tex_location " << tex_location << std::endl;
-  glUniform1i(tex_location,0);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  delete texture;
+static void initEmbers() {
+    static constexpr float EMBER_BASE_Y = -1.4f;
+    float data[EMBER_COUNT * 3];
+    srand(42);
+    for (int i = 0; i < EMBER_COUNT; ++i) {
+        float angle = (float)i / EMBER_COUNT * 6.2832f + ((float)rand()/RAND_MAX) * 0.4f;
+        float r     = 0.06f + ((float)rand()/RAND_MAX) * 0.18f;
+        data[i*3+0] = r * std::cos(angle);
+        data[i*3+1] = EMBER_BASE_Y;
+        data[i*3+2] = r * std::sin(angle);
+    }
+    glGenVertexArrays(1, &g_emberVao);
+    glGenBuffers(1, &g_emberVbo);
+    glBindVertexArray(g_emberVao);
+    glBindBuffer(GL_ARRAY_BUFFER, g_emberVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
 }
 
+int main(int, char* argv[]) {
+    // Set CWD to exe directory so shaders/ and models/ are always found
+    try {
+        auto exeDir = std::filesystem::path(argv[0]).parent_path();
+        if (!exeDir.empty())
+            std::filesystem::current_path(exeDir);
+    } catch (...) {}
 
-int main() {
-    Camera camera = Camera();
-
-    glfwSetErrorCallback(errorCallback);
+    glfwSetErrorCallback(errorCB);
     if (!glfwInit()) return 1;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -67,101 +72,143 @@ int main() {
     GLFWwindow* window = glfwCreateWindow(800, 600, "Fire Simulation", nullptr, nullptr);
     if (!window) { glfwTerminate(); return 1; }
 
-    glfwSetKeyCallback(window, keyCallback);
-    glfwSetWindowUserPointer(window, &camera);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetKeyCallback(window, keyCB);
+    glfwSetCursorPosCallback(window, mouseCB);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    g_cam.init(window);   // captures cursor
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to init GLAD\n";
-        return 1;
+        std::cerr << "Failed to init GLAD\n"; return 1;
     }
-
     std::cout << "OpenGL " << glGetString(GL_VERSION) << '\n';
+    std::cout << "Controls: WASD = move | mouse = look | Space/Ctrl = up/down | Esc = quit\n";
 
-    Shader shader("shaders/fire.vert", "shaders/fire.frag");
-    ParticleSystem particles;
-    
-    Shader meshShader("shaders/mesh.vert", "shaders/mesh.frag");
-    Mesh campsite = Mesh("models/campFire.obj");
+    try {
+    // ---- Systems ----
+    ParticleSystem fire;
+    SparkSystem    sparks;
+    SmokeSystem    smoke;
+    Skybox         skybox;
+    Mesh           campfire("models/campFire.obj");
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);           // additive blending for glow
+    Shader fireShader ("shaders/fire.vert",  "shaders/fire.frag");
+    Shader sparkShader("shaders/spark.vert", "shaders/spark.frag");
+    Shader smokeShader("shaders/smoke.vert", "shaders/smoke.frag");
+    Shader emberShader("shaders/spark.vert", "shaders/spark.frag");
+    Shader meshShader ("shaders/mesh.vert",  "shaders/mesh.frag");
 
-    glEnable(GL_PROGRAM_POINT_SIZE);       // let vertex shader set gl_PointSize
+    initEmbers();
+
+    // Campfire model: scale from raw OBJ units, sit at y=-1.4
+    Mat4 meshModel = Mat4::translate({0.f, -1.4f, 0.f})
+                   * Mat4::scale({0.003f, 0.003f, 0.003f});
+
+    // Fire point light flickers just above the campfire base
+    PointLight light;
+    light.position = {0.f, -1.1f, 0.f};
+
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     double prevTime = glfwGetTime();
-
-    init_textures(shader.id);
 
     while (!glfwWindowShouldClose(window)) {
         double now = glfwGetTime();
         float  dt  = (float)(now - prevTime);
         prevTime   = now;
+        float  tm  = (float)now;
 
-        camera.processInput(window, dt);
+        g_cam.processInput(window, dt);
 
-        particles.update(dt);
-        particles.uploadToGPU();
+        // ---- Update ----
+        light.update(tm);
+        fire.update(dt);   fire.uploadToGPU();
+        sparks.update(dt); sparks.uploadToGPU();
+        smoke.update(dt);  smoke.uploadToGPU();
 
+        // ---- Matrices ----
         int w, h;
         glfwGetFramebufferSize(window, &w, &h);
         glViewport(0, 0, w, h);
+        float aspect = (float)w / (float)h;
+
+        Mat4  view = g_cam.view();
+        Mat4  proj = g_cam.proj(aspect);
+        Mat4  mvp  = proj * view;   // particles: model = identity
+        float ps   = g_cam.pointScale((float)h);
 
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Mat4 model = identity();
-        Mat4 meshModel = identity();
-        meshModel.m[0] = 0.003f;
-        meshModel.m[5] = 0.003f;
-        meshModel.m[10] = 0.003f;
-        meshModel.m[13] = -1.0f;
-        Mat4 view = lookAt(
-            camera.pos,
-            camera.pos + camera.front,
-            camera.up
-        );
-        Mat4 projection = perspective(
-            45.0f,
-            (float)w / (float)h,
-            0.1f,
-            100.0f
-        );
+        // ---- 1. Skybox (behind everything) ----
+        glDisable(GL_BLEND);
+        skybox.draw(proj, view);
 
+        // ---- 2. Campfire mesh (opaque, Phong lit by fire) ----
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
 
         meshShader.use();
-        meshShader.setMat4("uModel", meshModel.m);
-        meshShader.setMat4("uView", view.m);
-        meshShader.setMat4("uProjection", projection.m);
-        meshShader.setVec3("uLightPos", camera.pos.x, camera.pos.y, camera.pos.z);
-        meshShader.setVec3("uColor", 1.0f, 0.0f, 0.0f);
+        meshShader.setMat4 ("uModel",          meshModel.ptr());
+        meshShader.setMat4 ("uView",           view.ptr());
+        meshShader.setMat4 ("uProjection",     proj.ptr());
+        meshShader.setVec3 ("uLightPos",       light.position.x, light.position.y, light.position.z);
+        meshShader.setVec3 ("uLightColor",     light.color.x,    light.color.y,    light.color.z);
+        meshShader.setFloat("uLightIntensity", light.intensity);
+        meshShader.setVec3 ("uCameraPos",      g_cam.pos.x, g_cam.pos.y, g_cam.pos.z);
+        meshShader.setVec3 ("uColor",          0.45f, 0.28f, 0.12f);  // wood brown
+        campfire.draw();
 
-        campsite.draw();
-
+        // ---- 3. Smoke (alpha blend, before fire) ----
         glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);
+
+        smokeShader.use();
+        smokeShader.setMat4 ("uMVP",        mvp.ptr());
+        smokeShader.setFloat("uPointScale", ps);
+        glBindVertexArray(smoke.vao());
+        glDrawArrays(GL_POINTS, 0, smoke.liveCount());
+
+        // ---- 4. Fire + Sparks + Embers (additive glow) ----
         glBlendFunc(GL_ONE, GL_ONE);
 
-        shader.use();
-        shader.setVec2("uResolution", (float)w, (float)h);
-        shader.setMat4("uModel", model.m);
-        shader.setMat4("uView", view.m);
-        shader.setMat4("uProjection", projection.m);
+        fireShader.use();
+        fireShader.setMat4 ("uMVP",        mvp.ptr());
+        fireShader.setFloat("uPointScale", ps);
+        glBindVertexArray(fire.vao());
+        glDrawArrays(GL_POINTS, 0, fire.liveCount());
 
-        glDepthMask(GL_FALSE);
-        glBindVertexArray(particles.vao());
-        glDrawArrays(GL_POINTS, 0, particles.liveCount());
+        sparkShader.use();
+        sparkShader.setMat4 ("uMVP",        mvp.ptr());
+        sparkShader.setFloat("uPointScale", ps);
+        glBindVertexArray(sparks.vao());
+        glDrawArrays(GL_POINTS, 0, sparks.liveCount());
+
+        // Embers — age attrib defaults to 0 → white-hot look
+        emberShader.use();
+        emberShader.setMat4 ("uMVP",        mvp.ptr());
+        emberShader.setFloat("uPointScale", ps);
+        glBindVertexArray(g_emberVao);
+        glDrawArrays(GL_POINTS, 0, EMBER_COUNT);
+
         glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    glDeleteVertexArrays(1, &g_emberVao);
+    glDeleteBuffers(1, &g_emberVbo);
+    } catch (const std::exception& e) {
+        std::cerr << "ERROR: " << e.what() << '\n';
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return 1;
+    }
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

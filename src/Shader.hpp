@@ -2,26 +2,22 @@
 #include <glad/glad.h>
 #include <string>
 
-class Shader
-{
+class Shader {
 public:
     GLuint id;
 
-    Shader(const std::string &vertPath, const std::string &fragPath);
+    Shader(const std::string& vertPath, const std::string& fragPath);
     ~Shader();
 
-    void use() const
-    {
-        glUseProgram(id);
-    }
+    void use() const { glUseProgram(id); }
 
-    void setFloat(const std::string &name, float v) const;
-    void setVec2(const std::string &name, float x, float y) const;
-    void setVec3(const std::string &name, float x, float y, float z) const;
-    void setMat4(const std::string &name, const float *mat) const;
-    void setTexture(const std::string &name, const std::string &path) const;
+    void setInt  (const std::string& name, int v)                     const;
+    void setFloat(const std::string& name, float v)                   const;
+    void setVec2 (const std::string& name, float x, float y)         const;
+    void setVec3 (const std::string& name, float x, float y, float z) const;
+    void setMat4 (const std::string& name, const float* mat)          const;
 
 private:
-    static GLuint compile(const std::string &path, GLenum type);
-    static std::string readFile(const std::string &path);
+    static GLuint compile(const std::string& path, GLenum type);
+    static std::string readFile(const std::string& path);
 };

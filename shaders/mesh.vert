@@ -7,15 +7,13 @@ uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
 
-out vec3 vWorldPos;
 out vec3 vNormal;
+out vec3 vWorldPos;
 
-void main()
-{
+void main() {
     vec4 worldPos = uModel * vec4(aPos, 1.0);
-
-    vWorldPos = worldPos.xyz;
-    vNormal = mat3(uModel) * aNormal;
-
-    gl_Position = uProjection * uView * worldPos;
+    vWorldPos     = worldPos.xyz;
+    // Uniform scale only — mat3(uModel) is safe
+    vNormal       = normalize(mat3(uModel) * aNormal);
+    gl_Position   = uProjection * uView * worldPos;
 }

@@ -17,13 +17,14 @@ class Mesh
 public:
     Mesh() = default;
     explicit Mesh(const std::string &path);
+    ~Mesh();
 
-    void draw();
+    void draw() const;
 
 private:
     GLuint m_vao = 0;
     GLuint m_vbo = 0;
-    int m_count = 0;
+    int    m_count = 0;
 
     void upload(const std::vector<MeshVertex> &vertices);
 };

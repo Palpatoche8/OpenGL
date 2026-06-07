@@ -16,11 +16,11 @@ gray8_image::gray8_image(int _sx, int _sy) {
     sy = _sy;
 
     length = sx*sy;
-    pixels = (GRAY8)aligned_alloc(TL_IMAGE_ALIGNMENT, length);
+    pixels = (GRAY8)_aligned_malloc(TL_IMAGE_ALIGNMENT, length);
 }
 
 gray8_image::~gray8_image() {
-  free(pixels);
+  _aligned_free(pixels);
 }
 
 const GRAY8& gray8_image::get_buffer() const {
@@ -36,11 +36,11 @@ rgb24_image::rgb24_image(int _sx, int _sy) {
     sy = _sy;
 
     length = sx*sy*3;
-    pixels = (RGB8)aligned_alloc(TL_IMAGE_ALIGNMENT, length);
+    pixels = (RGB8)_aligned_malloc(TL_IMAGE_ALIGNMENT, length);
 }
 
 rgb24_image::~rgb24_image() {
-  free(pixels);
+  _aligned_free(pixels);
 }
 
 const RGB8& rgb24_image::get_buffer() const {

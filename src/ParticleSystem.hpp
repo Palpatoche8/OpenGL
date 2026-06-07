@@ -1,32 +1,23 @@
 #pragma once
-#include <array>
-#include <cmath>
-#include <cstddef>
-#include <cstdlib>
 #include <glad/glad.h>
-#include <string>
-#include <vector>
-
 #include "Math.hpp"
+#include <array>
 
-static constexpr int MAX_PARTICLES = 10000;
+static constexpr int MAX_PARTICLES = 500;
 
-struct Particle
-{
-    Vec3 pos;
-    Vec3 vel;
+struct Particle {
+    Vec3  pos;
+    Vec3  vel;
     float life;
     float maxLife;
 };
 
-struct ParticleVertex
-{
-    Vec3 pos;
+struct ParticleVertex {
+    Vec3  pos;
     float life;
 };
 
-class ParticleSystem
-{
+class ParticleSystem {
 public:
     ParticleSystem();
     ~ParticleSystem();
@@ -34,23 +25,14 @@ public:
     void update(float dt);
     void uploadToGPU();
 
-    GLuint vao() const
-    {
-        return m_vao;
-    }
-    int liveCount() const
-    {
-        return m_liveCount;
-    }
+    GLuint vao()       const { return m_vao; }
+    int    liveCount() const { return m_liveCount; }
 
 private:
-    std::array<Particle, MAX_PARTICLES> m_pool;
+    std::array<Particle,       MAX_PARTICLES> m_pool;
     std::array<ParticleVertex, MAX_PARTICLES> m_verts;
-    int m_liveCount = 0;
-
-    GLuint m_vao, m_vbo;
-
+    int   m_liveCount  = 0;
     float m_spawnAccum = 0.f;
-
+    GLuint m_vao, m_vbo;
     void spawnOne();
 };
