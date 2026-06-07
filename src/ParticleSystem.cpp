@@ -1,5 +1,23 @@
 #include "ParticleSystem.hpp"
 
+#define PI 3.14159265f
+
+#define SPAWN_RADIUS 0.6f
+#define FIRE_BASE_Y -1.4f
+#define SPAWN_HEIGHT 0.02f
+
+#define HORIZONTAL_SPEED 0.08f
+#define MIN_VERTICAL_SPEED 0.5f
+#define VERTICAL_SPEED_RANGE 0.4f
+
+#define MIN_LIFE 1.2f
+#define LIFE_RANGE 0.6f
+
+#define SPAWN_RATE 10000.f
+#define TURBULENCE 0.9f
+#define HORIZONTAL_DAMPING 0.7f
+#define FIRE_CURVE_SCALE 1.4f
+
 static float randf()
 {
     return (float)rand() / (float)RAND_MAX;
@@ -39,20 +57,29 @@ ParticleSystem::~ParticleSystem()
     glDeleteVertexArrays(1, &m_vao);
 }
 
+Vec3 randomFireSpawnPos(float radius)
+{
+    float angle = randf() * 2.0f * PI;
+    float r = std::sqrt(randf()) * radius;
+
+    return Vec3(std::cos(angle) * r, FIRE_BASE_Y + randSigned() * SPAWN_HEIGHT,
+                std::sin(angle) * r);
+}
+
 void ParticleSystem::spawnOne()
 {
     for (auto &p : m_pool)
     {
         if (p.life <= 0.f)
         {
-            p.pos = Vec3(randSigned() * 0.06f, -0.85f + randSigned() * 0.06f,
-                         0.f + randSigned() * 0.06f);
+            p.pos = randomFireSpawnPos(SPAWN_RADIUS);
 
-            float spreadX = randSigned() * 0.18f;
-            float speedY = 0.5f + randf() * 0.6f;
-            p.vel = Vec3(spreadX, speedY, 0.f);
+            float speedY = MIN_VERTICAL_SPEED + randf() * VERTICAL_SPEED_RANGE;
 
-            p.maxLife = 1.2f + randf() * 0.8f;
+            p.vel = Vec3(randSigned() * HORIZONTAL_SPEED, speedY,
+                         randSigned() * HORIZONTAL_SPEED);
+
+            p.maxLife = MIN_LIFE + randf() * LIFE_RANGE;
             p.life = p.maxLife;
             return;
         }
@@ -61,7 +88,7 @@ void ParticleSystem::spawnOne()
 
 void ParticleSystem::update(float dt)
 {
-    m_spawnAccum += dt * 10000.f;
+    m_spawnAccum += dt * SPAWN_RATE;
     while (m_spawnAccum >= 1.f)
     {
         spawnOne();
@@ -74,16 +101,32 @@ void ParticleSystem::update(float dt)
         if (p.life <= 0.f)
             continue;
 
+        float oldT = 1.f - p.life / p.maxLife;
+
         p.life -= dt;
         if (p.life <= 0.f)
             continue;
 
-        p.vel.x += randSigned() * 0.04f;
-        p.vel.x *= 0.97f;
+        p.vel.x += randSigned() * TURBULENCE;
+        p.vel.z += randSigned() * TURBULENCE;
+
+        p.vel.x *= HORIZONTAL_DAMPING;
+        p.vel.z *= HORIZONTAL_DAMPING;
 
         p.pos += p.vel * dt;
 
         float t = 1.f - (p.life / p.maxLife);
+
+        // distribution made by me !
+        // https://www.desmos.com/calculator/gcppjhpcj5
+        float width =
+            FIRE_CURVE_SCALE * std::min(std::sqrt(t), std::sqrt(1.0f - t));
+
+        float pull = (1.0f - width) * dt * 5.0f;
+
+        p.pos.x -= p.pos.x * pull;
+        p.pos.z -= p.pos.z * pull;
+
         m_verts[m_liveCount++] = { p.pos, t };
     }
 }

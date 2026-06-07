@@ -85,7 +85,7 @@ int main() {
     ParticleSystem particles;
     
     Shader meshShader("shaders/mesh.vert", "shaders/mesh.frag");
-    Mesh campsite("models/campFire.obj");
+    Mesh campsite = Mesh("models/campFire.obj");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);           // additive blending for glow

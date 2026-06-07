@@ -18,7 +18,7 @@ public:
     Mesh() = default;
     explicit Mesh(const std::string &path);
 
-    void draw() const;
+    void draw();
 
 private:
     GLuint m_vao = 0;

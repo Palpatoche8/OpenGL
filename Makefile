@@ -1,6 +1,6 @@
 CC := g++
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -fopenmp
+CXXFLAGS = -Wall -Wextra -std=c++17 -g -fopenmp
 VCPKG = C:/Users/Utilisateur/Desktop/ING2/Synthese Image/Projet/vcpkg
 VCPKG_LIB = $(VCPKG)/installed/x64-mingw-static/lib
 VCPKG_INC = $(VCPKG)/installed/x64-mingw-static/include
@@ -20,7 +20,7 @@ endif
 INCS     := -I"$(VCPKG_INC)" -I$(GLAD_INC) -Isrc -Iextern/glm
 
 TARGET   := build/fire_sim
-SRCS     := src/main.cpp src/Shader.cpp src/ParticleSystem.cpp src/image.cpp src/image_io.cpp
+SRCS = src/main.cpp src/Shader.cpp src/ParticleSystem.cpp src/image.cpp src/image_io.cpp src/Mesh.cpp
 OBJS     := $(patsubst src/%.cpp, build/%.o, $(SRCS))
 
 .PHONY: all clean

@@ -129,7 +129,7 @@ void Mesh::upload(const std::vector<MeshVertex> &vertices)
     glBindVertexArray(0);
 }
 
-void Mesh::draw() const
+void Mesh::draw()
 {
     glBindVertexArray(m_vao);
     glDrawArrays(GL_TRIANGLES, 0, m_count);
