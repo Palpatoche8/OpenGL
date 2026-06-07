@@ -15,7 +15,6 @@
 #include "Skybox.hpp"
 #include "Mesh.hpp"
 
-// ---- Globals for callbacks ----
 static Camera g_cam;
 
 static void errorCB(int, const char* d) { std::cerr << "GLFW: " << d << '\n'; }
@@ -29,7 +28,6 @@ static void mouseCB(GLFWwindow* w, double xpos, double ypos) {
     g_cam.mouseCallback(w, xpos, ypos);
 }
 
-// ---- Embers: static glowing points ringing the fire base ----
 static constexpr int EMBER_COUNT = 28;
 static GLuint g_emberVao, g_emberVbo;
 
@@ -86,7 +84,6 @@ int main(int, char* argv[]) {
     std::cout << "Controls: WASD = move | mouse = look | Space/Ctrl = up/down | Esc = quit\n";
 
     try {
-    // ---- Systems ----
     ParticleSystem fire;
     SparkSystem    sparks;
     SmokeSystem    smoke;
@@ -122,13 +119,11 @@ int main(int, char* argv[]) {
 
         g_cam.processInput(window, dt);
 
-        // ---- Update ----
         light.update(tm);
         fire.update(dt);   fire.uploadToGPU();
         sparks.update(dt); sparks.uploadToGPU();
         smoke.update(dt);  smoke.uploadToGPU();
 
-        // ---- Matrices ----
         int w, h;
         glfwGetFramebufferSize(window, &w, &h);
         glViewport(0, 0, w, h);
@@ -136,17 +131,17 @@ int main(int, char* argv[]) {
 
         Mat4  view = g_cam.view();
         Mat4  proj = g_cam.proj(aspect);
-        Mat4  mvp  = proj * view;   // particles: model = identity
+        Mat4  mvp  = proj * view;  
         float ps   = g_cam.pointScale((float)h);
 
         glClearColor(0.f, 0.f, 0.f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // ---- 1. Skybox (behind everything) ----
+        // Skybox (behind everything) 
         glDisable(GL_BLEND);
         skybox.draw(proj, view);
 
-        // ---- 2. Campfire mesh (opaque, Phong lit by fire) ----
+        // Campfire mesh (opaque, Phong lit by fire)
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
 
@@ -161,7 +156,7 @@ int main(int, char* argv[]) {
         meshShader.setVec3 ("uColor",          0.45f, 0.28f, 0.12f);  // wood brown
         campfire.draw();
 
-        // ---- 3. Smoke (alpha blend, before fire) ----
+        // Smoke (alpha blend, before fire)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
@@ -172,7 +167,7 @@ int main(int, char* argv[]) {
         glBindVertexArray(smoke.vao());
         glDrawArrays(GL_POINTS, 0, smoke.liveCount());
 
-        // ---- 4. Fire + Sparks + Embers (additive glow) ----
+        // Fire + Sparks + Embers (additive glow)
         glBlendFunc(GL_ONE, GL_ONE);
 
         fireShader.use();
@@ -187,7 +182,6 @@ int main(int, char* argv[]) {
         glBindVertexArray(sparks.vao());
         glDrawArrays(GL_POINTS, 0, sparks.liveCount());
 
-        // Embers — age attrib defaults to 0 → white-hot look
         emberShader.use();
         emberShader.setMat4 ("uMVP",        mvp.ptr());
         emberShader.setFloat("uPointScale", ps);
