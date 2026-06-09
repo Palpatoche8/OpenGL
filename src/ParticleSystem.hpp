@@ -10,6 +10,7 @@ struct Particle {
     Vec3  vel;
     float life;
     float maxLife;
+    Vec3  spawnOrigin;
 };
 
 struct ParticleVertex {
@@ -27,6 +28,7 @@ public:
 
     GLuint vao()       const { return m_vao; }
     int    liveCount() const { return m_liveCount; }
+    void setSpawnOrigin(Vec3 o) { m_spawnOrigin = o; }
 
 private:
     std::array<Particle,       MAX_PARTICLES> m_pool;
@@ -35,4 +37,5 @@ private:
     float m_spawnAccum = 0.f;
     GLuint m_vao, m_vbo;
     void spawnOne();
+    Vec3 m_spawnOrigin = {0.f, 0.f, 0.f};
 };
