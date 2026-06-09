@@ -27,7 +27,7 @@ void main() {
     vec3 H   = normalize(L + V);
     float sp = pow(max(dot(N, H), 0.0), 32.0) * atten;
 
-    vec3 ambient  = uColor * 0.04;
+    vec3 ambient  = uColor * 0.1;
     vec3 diffuse  = uColor * diff * uLightColor * atten;
     vec3 specular = uLightColor * sp * 0.3;
 

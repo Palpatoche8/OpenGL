@@ -238,7 +238,7 @@ int main(int, char* argv[]) {
 
         // Floor
         meshShader.setMat4("uModel", Mat4::identity().ptr());
-        meshShader.setVec3("uColor", 0.2f, 0.15f, 0.08f);
+        meshShader.setVec3("uColor", 0.2f, 0.5f, 0.2f);
         glBindVertexArray(g_floorVao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
