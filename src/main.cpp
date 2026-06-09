@@ -52,6 +52,36 @@ static void initEmbers() {
     glBindVertexArray(0);
 }
 
+static GLuint g_floorVao, g_floorVbo;
+
+static void initFloor() {
+    static const float verts[] = {
+       //  X       Y     Z      NX      NY  NZ ,
+        -50.f,  -1.8f,  -50.f,  0.f,  1.f,  0.f,
+         50.f,  -1.8f,  -50.f,  0.f,  1.f,  0.f,
+         50.f,  -1.8f,   50.f,  0.f,  1.f,  0.f,
+
+        -50.f,  -1.8f,  -50.f,  0.f,  1.f,  0.f,
+         50.f,  -1.8f,   50.f,  0.f,  1.f,  0.f,
+        -50.f,  -1.8f,   50.f,  0.f,  1.f,  0.f,
+    };
+
+    glGenVertexArrays(1, &g_floorVao);
+    glGenBuffers(1, &g_floorVbo);
+    glBindVertexArray(g_floorVao);
+    glBindBuffer(GL_ARRAY_BUFFER, g_floorVbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+    // location 0 = position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // location 1 = normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
 int main(int, char* argv[]) {
     // Set CWD to exe directory so shaders/ and models/ are always found
     try {
@@ -97,6 +127,7 @@ int main(int, char* argv[]) {
     Shader meshShader ("shaders/mesh.vert",  "shaders/mesh.frag");
 
     initEmbers();
+    initFloor();
 
     // Campfire model: scale from raw OBJ units, sit at y=-1.4
     Mat4 meshModel = Mat4::translate({0.f, -1.4f, 0.f})
@@ -155,6 +186,14 @@ int main(int, char* argv[]) {
         meshShader.setVec3 ("uCameraPos",      g_cam.pos.x, g_cam.pos.y, g_cam.pos.z);
         meshShader.setVec3 ("uColor",          0.45f, 0.28f, 0.12f);  // wood brown
         campfire.draw();
+
+        // Floor (same shader, same light, earthy dirt color)
+        Mat4 floorModel = Mat4::identity();   // already in world space
+
+        meshShader.setMat4 ("uModel",          floorModel.ptr());
+        meshShader.setVec3 ("uColor",          0.2f, 0.4f, 0.2f);  // dark dirt/earth
+        glBindVertexArray(g_floorVao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         // Smoke (alpha blend, before fire)
         glEnable(GL_BLEND);

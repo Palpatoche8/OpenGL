@@ -4,9 +4,9 @@
 #include <cstddef>
 
 #define PI              3.14159265f
-#define SPAWN_RADIUS    0.15f    // campfire base radius in world units
+#define SPAWN_RADIUS    0.35f    // campfire base radius in world units
 #define FIRE_BASE_Y    -1.4f    // matches model translate y
-#define SPAWN_HEIGHT    0.02f
+#define SPAWN_HEIGHT    -0.1f
 
 #define HORIZONTAL_SPEED      0.06f
 #define MIN_VERTICAL_SPEED    0.5f
@@ -47,22 +47,13 @@ ParticleSystem::~ParticleSystem()
     glDeleteVertexArrays(1, &m_vao);
 }
 
-static const Vec3 kSources[] = {
-    { 0.0f, FIRE_BASE_Y, 0.0f },   // centre
-    { 0.3f, FIRE_BASE_Y, 0.1f },   // droite
-    {-0.3f, FIRE_BASE_Y,-0.1f },   // gauche
-};
-static constexpr int kSourceCount = 3;
-
 static Vec3 randomFireSpawnPos()
 {
-    int   src   = (int)(randf() * kSourceCount) % kSourceCount;
-    Vec3  base  = kSources[src];
     float angle = randf() * 2.f * PI;
     float r     = std::sqrt(randf()) * SPAWN_RADIUS;
-    return Vec3(base.x + std::cos(angle) * r,
-                base.y + randSigned() * SPAWN_HEIGHT,
-                base.z + std::sin(angle) * r);
+    return Vec3(std::cos(angle) * r,
+                FIRE_BASE_Y + randSigned() * SPAWN_HEIGHT,
+                std::sin(angle) * r);
 }
 
 void ParticleSystem::spawnOne()
